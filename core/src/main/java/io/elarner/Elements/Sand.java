@@ -11,4 +11,9 @@ public class Sand extends MovableSolid {
     public Sand(int x, int y) {
         super(DEFAULT_COLOR, x, y);
     }
+
+    @Override
+    public int getPriority() {
+        return 10;
+    }
 }

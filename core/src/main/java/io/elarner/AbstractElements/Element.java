@@ -9,20 +9,21 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 
-import io.elarner.Simulator.PixelGrid;
+import io.elarner.Simulator.Matrix;
 
 
 public abstract class Element {
     private Color color; // Assuming color is represented as an integer (ARGB or similar)
     protected int x, y; // Position of the element in the grid
     protected float xVelocity, yVelocity;
+    protected float accuXChange = 0.0f; // x change for the element
     protected float accuYChange = 0.0f; // accumulated y change. stores up to 1.0f of y accumulated before trying to add change
     
     private static Map<Color, Texture> textureCache = new HashMap<>();
 
-    private static final float GRAVITY = 50.0f; // Gravity constant
+    private static final float GRAVITY = 0.091f; // Gravity constant
     private static final float FRICTION = 0.1f; // Friction constant
-    private static final float MAX_VELOCITY = 10f; // Maximum velocity for the element
+    // private static final float MAX_VELOCITY = 10f; // Maximum velocity for the element
     public static Random random = new Random();
     
 
@@ -40,6 +41,7 @@ public abstract class Element {
     public Color getColor() {
         return color;
     }
+
     public void setX(int x) {
         this.x = x;
     }
@@ -57,17 +59,34 @@ public abstract class Element {
     public float getYVelocity() {
         return yVelocity;
     }
+    
+    public void setVelocity(float vel) {
+        this.yVelocity = vel;
+    }
 
     public void render(Batch batch, int x, int y) {
         batch.draw(Element.getTexture(this.color), x, y, 1, 1);
     }
 
-    public abstract void update(float delta, PixelGrid matrix);
+    public abstract void update(float delta, Matrix matrix);
 
-    public void updateBufferPosition(int index, PixelGrid matrix) {
-        matrix.updateBuffer(index, this); // Update the buffer with the new position
-        this.x = index % matrix.width;
-        this.y = index / matrix.width;
+    public abstract int getPriority();
+
+    public void updateGridPosition(int index, Matrix matrix) {
+        if (index != this.y*matrix.width + this.x) {
+            Element atPostition = matrix.getParticle(index);
+            if (atPostition != null) { // Waste of time if statement
+                matrix.updateMatrix(this.y*matrix.width + this.x, atPostition);
+                atPostition.setX(this.x);
+                atPostition.setY(this.y);
+            } else {
+                matrix.updateMatrix(this.y*matrix.width + this.x, null);
+            }
+            
+            matrix.updateMatrix(index, this); // Update the buffer with the new position
+            this.x = index % matrix.width;
+            this.y = index / matrix.width;
+        }
     }
 
     public void applyForces(float delta) {
@@ -78,7 +97,18 @@ public abstract class Element {
         this.yVelocity -= GRAVITY * delta; // Apply gravity
     };
 
+    public float[] normalizedVelocity() {
+        float length = (float) Math.sqrt(xVelocity * xVelocity + yVelocity * yVelocity);
+        if (length == 0) {
+            return new float[]{0, 0}; // Avoid division by zero
+        }
+        return new float[]{xVelocity / length, yVelocity / length};
+    }
+
     private static void setupTexture(Color color) {
+        if (color == null) {
+            return;
+        }
         if (!textureCache.containsKey(color)) {
             Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
             pixmap.setColor(color);
@@ -104,4 +134,6 @@ public abstract class Element {
         }
         textureCache.clear();
     }
+
+    
 }

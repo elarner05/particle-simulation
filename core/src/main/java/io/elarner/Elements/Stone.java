@@ -11,4 +11,10 @@ public class Stone extends ImmovableSolid {
     public Stone(int x, int y) {
         super(DEFAULT_COLOR, x, y);
     }
+
+    @Override
+    public int getPriority() {
+        return 100;
+    }
 }
+

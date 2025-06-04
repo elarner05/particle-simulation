@@ -12,4 +12,8 @@ public class Water extends Liquid {
         super(DEFAULT_COLOR, x, y);
     }
 
+    @Override
+    public int getPriority() {
+        return 1;
+    }
 }

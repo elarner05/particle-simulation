@@ -40,11 +40,13 @@ public class Main extends ApplicationAdapter {
     final private int gameResX = 400;
     final private int gameResY = 200;
 
-    private PixelGrid pixelGrid;
+    private Matrix pixelGrid;
 
 
     @Override
     public void create() {
+        int numCores = Runtime.getRuntime().availableProcessors();
+        System.out.println(numCores);
         
         gameFrameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, gameResX, gameResY, false);
         scaledFrameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, gameResX*scale, gameResY*scale, false);
@@ -64,7 +66,7 @@ public class Main extends ApplicationAdapter {
         scaledCamera.setToOrtho(false, gameResX*scale, gameResY*scale);
         this.scaledBatch.setProjectionMatrix(scaledCamera.combined);
 
-        pixelGrid = new PixelGrid(gameResX, gameResY);
+        pixelGrid = new Matrix(gameResX, gameResY);
 
         this.input = new InputProcessor() {
 
@@ -79,7 +81,7 @@ public class Main extends ApplicationAdapter {
                 } else if (keycode == Keys.LEFT) {
                     Main.xShift -= 5;
                 } else if (keycode == Keys.SPACE) {
-                    PixelGrid.elementType = PixelGrid.elementType.next();
+                    Matrix.elementType = Matrix.elementType.next();
                 }  else {
                     System.out.println("Key pressed keycode: " + keycode);
                 }
@@ -182,7 +184,6 @@ public class Main extends ApplicationAdapter {
 
     }
 
-
     public void gameLogic() {
         int scale = Gdx.graphics.getHeight() / gameResY;
         int mx = Gdx.input.getX() / scale;
@@ -191,6 +192,7 @@ public class Main extends ApplicationAdapter {
         if (mx >= 0 && mx < gameResX && my >= 0 && my < gameResY) {
             if (Gdx.input.isTouched()) {
                 pixelGrid.addParticle(mx, my);
+                
                 pixelGrid.addParticle(mx+1, my);
                 pixelGrid.addParticle(mx-1, my);
                 pixelGrid.addParticle(mx, my+1);
